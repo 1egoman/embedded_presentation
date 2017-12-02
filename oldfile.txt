@@ -1,0 +1,4557 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Avenir Next', sans-serif; }
+      h1, h2, h3 {
+        font-family: 'Avenir Next', sans-serif;
+        font-weight: normal;
+        color: #4198FF;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono', sans-serif; }
+
+			.title h1 {
+				font-size: 80px;
+				color: #555;
+      }
+
+      .inverted { background-color: #4198FF; color: #fff; }
+      .inverted h1, .inverted h2, .inverted h3 { color: #fff; }
+
+      .memory-map td {
+        width: 24px;
+        height: 24px;
+        font-family: 'Ubuntu Mono', monospace;
+        text-align: center;
+        background-color: #FAFAFA;
+        border: 0px;
+      }
+      .memory-map td:nth-child(2n) {
+        background-color: #ddd;
+      }
+      .memory-map td[h] { background-color: #4198FF; color: #fff; }
+      .memory-map th {
+        background-color: #fff;
+        font-family: 'Avenir Next', sans-serif;
+        font-weight: normal;
+      }
+
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle, title
+
+# How does an embedded linux board boot?
+
+#### Ryan Gaus
+
+---
+class: inverted, center, middle, title
+## I don't know this stuff.
+
+--
+### But hopefully I can at least give you the gist.
+
+---
+class: inverted, center, middle, title
+## Tools
+
+---
+class: inverted, center, middle, title
+### dd if=/oldfile.txt of=/newfile.txt bs=1
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=1`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=1`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td h>&lt;</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=1`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td h>D</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=1`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>D</td>
+      <td h>O</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=1`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td h>&lt;</td>
+      <td h>!</td>
+      <td h>D</td>
+      <td h>O</td>
+      <td h>C</td>
+      <td h>T</td>
+      <td h>Y</td>
+      <td h>P</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td h>E</td>
+      <td h> </td>
+      <td h>h</td>
+      <td h>t</td>
+      <td h>m</td>
+      <td h>l</td>
+      <td h>&gt;</td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+---
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td h>&lt;</td>
+      <td h>!</td>
+      <td h>D</td>
+      <td h>O</td>
+      <td h>C</td>
+      <td h>T</td>
+      <td h>Y</td>
+      <td h>P</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>&gt;</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 skip=1 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td h>&lt;</td>
+      <td h>!</td>
+      <td h>D</td>
+      <td h>O</td>
+      <td h>C</td>
+      <td h>T</td>
+      <td h>Y</td>
+      <td h>P</td>
+    </tr>
+    <tr>
+      <td h>E</td>
+      <td h> </td>
+      <td h>h</td>
+      <td h>t</td>
+      <td h>m</td>
+      <td h>l</td>
+      <td h>&gt;</td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>e</td>
+      <td>a</td>
+      <td>d</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td h>&lt;</td>
+      <td h>!</td>
+      <td h>D</td>
+      <td h>O</td>
+      <td h>C</td>
+      <td h>T</td>
+      <td h>Y</td>
+      <td h>P</td>
+    </tr>
+    <tr>
+      <td h>E</td>
+      <td h> </td>
+      <td h>h</td>
+      <td h>t</td>
+      <td h>m</td>
+      <td h>l</td>
+      <td h>&gt;</td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 seek=3 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>&gt;</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>h</td>
+      <td h>e</td>
+      <td h>a</td>
+      <td h>d</td>
+      <td h>></td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>t</td>
+      <td h>i</td>
+      <td h>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>h</td>
+      <td h>e</td>
+      <td h>a</td>
+      <td h>d</td>
+      <td h>></td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>t</td>
+      <td h>i</td>
+      <td h>t</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+# dd
+`dd if=/oldfile.txt of=/newfile.txt bs=8 seek=3 skip=5 count=2`
+
+<div style="float: left;">
+  <th>/oldfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td>&lt;</td>
+      <td>!</td>
+      <td>D</td>
+      <td>O</td>
+      <td>C</td>
+      <td>T</td>
+      <td>Y</td>
+      <td>P</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td> </td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>&gt;</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>h</td>
+      <td>t</td>
+      <td>m</td>
+      <td>l</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>h</td>
+      <td h>e</td>
+      <td h>a</td>
+      <td h>d</td>
+      <td h>></td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>t</td>
+      <td h>i</td>
+      <td h>t</td>
+    </tr>
+    <tr>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td>T</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>/</td>
+      <td>t</td>
+      <td>i</td>
+      <td>t</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>&lt;</td>
+      <td>m</td>
+      <td>e</td>
+    </tr>
+    <tr>
+      <td>t</td>
+      <td>a</td>
+      <td> </td>
+      <td>c</td>
+      <td>h</td>
+      <td>a</td>
+      <td>r</td>
+      <td>s</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>t</td>
+      <td>=</td>
+      <td>"</td>
+      <td>u</td>
+      <td>t</td>
+      <td>f</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>"</td>
+      <td>></td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>&lt;</td>
+      <td>s</td>
+      <td>t</td>
+      <td>y</td>
+      <td>l</td>
+      <td>e</td>
+      <td>></td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>@</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <td>m</td>
+      <td>p</td>
+      <td>o</td>
+      <td>r</td>
+      <td>t</td>
+      <td> </td>
+      <td>u</td>
+      <td>r</td>
+    </tr>
+  </table>
+</div>
+
+<div style="float: right;">
+  <th>/newfile.txt</th>
+  <table class="memory-map">
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>h</td>
+      <td h>e</td>
+      <td h>a</td>
+      <td h>d</td>
+      <td h>&gt;</td>
+      <td h> </td>
+    </tr>
+    <tr>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h> </td>
+      <td h>&lt;</td>
+      <td h>t</td>
+      <td h>i</td>
+      <td h>t</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</div>
+
+---
+class: inverted, center, middle, title
+## hexdump -C oldfile.txt
+
+---
+```
+$ hexdump -C oldfile.txt
+
+00000000  3c 21 44 4f 43 54 59 50  45 20 68 74 6d 6c 3e 0a  |<!DOCTYPE html>.|
+00000010  3c 68 74 6d 6c 3e 0a 20  20 3c 68 65 61 64 3e 0a  |<html>.  <head>.|
+00000020  20 20 20 20 3c 74 69 74  6c 65 3e 54 69 74 6c 65  |    <title>Title|
+00000030  3c 2f 74 69 74 6c 65 3e  0a 20 20 20 20 3c 6d 65  |</title>.    <me|
+00000040  74 61 20 63 68 61 72 73  65 74 3d 22 75 74 66 2d  |ta charset="utf-|
+00000050  38 22 3e 0a 20 20 20 20  3c 73 74 79 6c 65 3e 0a  |8">.    <style>.|
+00000060  20 20 20 20 20 20 40 69  6d 70 6f 72 74 20 75 72  |      @import ur|
+00000070  6c 28 68 74 74 70 73 3a  2f 2f 66 6f 6e 74 73 2e  |l(https://fonts.|
+00000080  67 6f 6f 67 6c 65 61 70  69 73 2e 63 6f 6d 2f 63  |googleapis.com/c|
+00000090  73 73 3f 66 61 6d 69 6c  79 3d 59 61 6e 6f 6e 65  |ss?family=Yanone|
+000000a0  2b 4b 61 66 66 65 65 73  61 74 7a 29 3b 0a 20 20  |+Kaffeesatz);.  |
+000000b0  20 20 20 20 40 69 6d 70  6f 72 74 20 75 72 6c 28  |    @import url(|
+000000c0  68 74 74 70 73 3a 2f 2f  66 6f 6e 74 73 2e 67 6f  |https://fonts.go|
+000000d0  6f 67 6c 65 61 70 69 73  2e 63 6f 6d 2f 63 73 73  |ogleapis.com/css|
+000000e0  3f 66 61 6d 69 6c 79 3d  44 72 6f 69 64 2b 53 65  |?family=Droid+Se|
+000000f0  72 69 66 3a 34 30 30 2c  37 30 30 2c 34 30 30 69  |rif:400,700,400i|
+00000100  74 61 6c 69 63 29 3b 0a  20 20 20 20 20 20 40 69  |talic);.      @i|
+00000110  6d 70 6f 72 74 20 75 72  6c 28 68 74 74 70 73 3a  |mport url(https:|
+00000120  2f 2f 66 6f 6e 74 73 2e  67 6f 6f 67 6c 65 61 70  |//fonts.googleap|
+00000130  69 73 2e 63 6f 6d 2f 63  73 73 3f 66 61 6d 69 6c  |is.com/css?famil|
+```
+
+---
+class: inverted, center, middle, title
+### Mounting
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
